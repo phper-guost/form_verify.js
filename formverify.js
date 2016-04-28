@@ -5,6 +5,7 @@
  * @auther guost
  */
 var formVerify	=	function(form){
+	var error , construct , params;
 	this.construct	=	{
 		iptdom			:	'',		//要验证码的inputdom
 		tipstype		:	'default',	//提示信息使用方式default:不适用任何框架直接输出，bs:bootstrap,layer三个选择
@@ -87,6 +88,7 @@ var formVerify	=	function(form){
 	/*使用默认方式提示，如果有错误聚焦时清空*/
 	this.default_beforeVerify	=	function(ipt){
 		this.initErr( ipt );
+		this.init(ipt);
 		$(ipt).siblings('i,.help-inline').remove();
 	}
 	/*css框架使用bootstrap的错误提示,如果此行有错误提示，聚焦时清空*/
@@ -107,33 +109,33 @@ var formVerify	=	function(form){
 			if( typeof( relationLayerIndex ) != 'undefined' ) layer.close( relationLayerIndex );
 		}
 	}
+	/*初始化错误信息*/
 	this.initErr	=	function( ipt ){
-		$.extend( this.construct , { errno : 0 , errMsg : this.error[0] } );
 		$(ipt).attr( 'errno' , 0 );
-	}
-	/*验证初始化*/
-	this.init	=	function(ipt){
-		$.extend( this.construct , { iptdom : ipt } );
+		error = $.extend( {}, this.error , { errno : 0 , errMsg : this.error[0] } );
+		construct = $.extend({}, this.construct , { errno : 0 , errMsg : this.error[0] , iptdom : ipt } );
 		var params_str = $(ipt).attr( 'data-params' );
-		var params = this.params;
 		if( typeof( params_str ) != 'undefined' ){
 			var params_obj	=	eval('(' + params_str + ')');
 			params = $.extend( {}, this.params , params_obj );
 		}
 		else return;
+	}
+	/*验证初始化*/
+	this.init	=	function(ipt){
 		/*获取多选是否是必须勾选项*/
 		var need_checked	=	params['verify-checked'];
-		if( need_checked && ipt.checked ) $.extend(this.construct , { errno:400004 , errMsg : this.error[400004] });
+		if( need_checked && ipt.checked ) $.extend( construct , { errno:400004 , errMsg : this.error[400004] });
 		
 		//获取验证的最小长度
 		var lengthMinLimit	=	params['verify-minLen'];
-		if( lengthMinLimit ) $.extend(this.construct , { lengthMinLimit:lengthMinLimit });
-		else $.extend(this.construct , {lengthMinLimit:0});
+		if( lengthMinLimit ) $.extend( construct , { lengthMinLimit:lengthMinLimit });
+		else $.extend( construct , {lengthMinLimit:0});
 		
 		//获取验证的最大长度
 		var lengthMaxLimit	=	params['verify-maxLen'];
-		if( lengthMaxLimit ) $.extend(this.construct , {lengthMaxLimit:lengthMaxLimit});
-		else $.extend(this.construct , {lengthMaxLimit:0});
+		if( lengthMaxLimit ) $.extend( construct ,{lengthMaxLimit:lengthMaxLimit});
+		else $.extend(construct , {lengthMaxLimit:0});
 		
 		//获取关联的dom
 		relateIptDom	=	params['relation-dom']; 
@@ -141,70 +143,70 @@ var formVerify	=	function(form){
 			var relaProp	=	params['relation-prop'];
 			if( relaProp ) relateIptPropValue	=	$(relateIptDom).attr(relaProp);
 			else relateIptPropValue	=	$(relateIptDom).val();
-			$.extend(this.construct , {relateIptDom:relateIptDom ,relateIptPropValue:relateIptPropValue});
+			$.extend(construct , {relateIptDom:relateIptDom ,relateIptPropValue:relateIptPropValue});
 		}
-		else $.extend(this.construct , {relateIptDom:'' ,relateIptPropValue:''}); 
+		else $.extend(construct , {relateIptDom:'' ,relateIptPropValue:''}); 
 		
 		//获取验证的类型
 		verifyType	=	params['verify-type'];
-		if( verifyType ) $.extend(this.construct , {verifyType:verifyType});
-		else $.extend(this.construct , {verifyType:''});
+		if( verifyType ) $.extend(construct , {verifyType:verifyType});
+		else $.extend(construct , {verifyType:''});
 		
 		//验证是否必填项
 		iptValue	=	$(ipt).val();
-		$.extend( this.construct , { iptvalue : iptValue } );
+		$.extend(construct ,  { iptvalue : iptValue } );
 		var verifyRequired	=	params['required']; 
-		if( verifyRequired && iptValue.length == 0 ) $.extend( this.construct , { errno : 400001 , errMsg : this.error[400001] } ); 
+		if( verifyRequired && iptValue.length == 0 ) $.extend(construct ,  { errno : 400001 , errMsg : this.error[400001] } ); 
 		
 		//获取验证的ajax参数
 		var ajax_url		=	params['ajax-url'];
 		var ajax_callback	=	params['ajax-callback']; 
 		var ajax_refresh	=	params['ajax_refresh']; 
 		var ajax_target		=	params['ajax_target']; 
-		if( ajax_url ) $.extend(this.construct , {ajax_url:ajax_url});
-		else $.extend(this.construct , {ajax_url:''});
-		if( ajax_refresh ) $.extend(this.construct , {ajax_refresh:true});
-		if( ajax_target ) $.extend(this.construct , {ajax_target:ajax_target});
-		else $.extend(this.construct , {ajax_target:ipt});
+		if( ajax_url ) $.extend( construct , {ajax_url:ajax_url} );
+		else $.extend( construct , {ajax_url:''} );
+		if( ajax_refresh ) $.extend( construct , {ajax_refresh:true} );
+		if( ajax_target ) $.extend( construct , {ajax_target:ajax_target} );
+		else $.extend( construct , {ajax_target:ipt} );
 		
 		//获取layer显示的dom元素
 		var layerdom	=	params['verify-layer-dom']; 
 		if( false == layerdom ) layerdom	=	ipt;
-		$.extend( this.construct , {'layerdom':layerdom} );
+		$.extend(construct , {'layerdom':layerdom} );
 		
 		//是否显示成功提示
 		var no_tips	=	params['no-tips'];
-		if( no_tips ) $.extend( this.construct , {'showTips':false} );
+		if( no_tips ) $.extend( construct , {'showTips':false} );
 		
 		//获取自定义的成功提示信息
 		var successmsg	=	params['verify-success']; 
-		if( successmsg ) $.extend( this.error , { 0 : successmsg } );
-		else $.extend( this.error , { 0 : "验证成功" } );
+		if( successmsg ) $.extend( error,  { 0 : successmsg } );
+		else $.extend( error,  { 0 : "验证成功" } );
 		
 		//获取自定义的错误提示信息
 		var errormsg	=	params['verify-errmsg'];
-		$.extend( this.error , {'300000':errormsg} );
+		$.extend( error,  {'300000':errormsg} );
 	}
 	/*验证字符长度*/
 	this.verifyLength	=	function(){
-		var prop	=	this.construct;
+		var prop	=	construct;
 		if (prop.errno	> 0 )  return;
 		if( prop.lengthMinLimit > 0 ){
 			if( prop.iptvalue.length < prop.lengthMinLimit ){
-				$.extend( this.construct , { errno : 400002 , errMsg : this.error[400002].replace('XX' , prop.lengthMinLimit ) } );
+				$.extend(construct ,  { errno : 400002 , errMsg : this.error[400002].replace('XX' , prop.lengthMinLimit ) } );
 				return;
 			}
 		}
 		if( prop.lengthMaxLimit > 0 ){
 			if( prop.iptvalue.length > prop.lengthMaxLimit ){
-				$.extend( this.construct , { errno : 400003 , errMsg : this.error[400003].replace('XX' , prop.lengthMaxLimit ) } );
+				$.extend(construct ,  { errno : 400003 , errMsg : this.error[400003].replace('XX' , prop.lengthMaxLimit ) } );
 				return;
 			}
 		}
 	}
 	/*验证字符类型*/
 	this.verifyType	=	function(){
-		var prop	=	this.construct;
+		var prop	=	construct;
 		if (prop.errno	> 0 )  return;
 		var preg,err_no;
 		switch( prop.verifyType ){
@@ -263,29 +265,29 @@ var formVerify	=	function(form){
 			default:
 				break;
 		}
-		if( preg && preg.test( prop.iptvalue ) == false ) $.extend( this.construct , {errno : err_no , errMsg : this.error[err_no]} );
-		else $.extend( this.construct , {errno : 0 , errMsg : this.error[0]} );
+		if( preg && preg.test( prop.iptvalue ) == false ) $.extend( construct , {errno : err_no , errMsg : this.error[err_no]} );
+		else $.extend( construct , {errno : 0 , errMsg : this.error[0]} );
 	}
 	/*验证是否有上下级关联*/
 	this.verifyRelation	=	function(){
-		var prop	=	this.construct;
+		var prop	=	construct;
 		if (prop.errno > 0)  return;
 		if( prop.relateIptDom && prop.relateIptPropValue != prop.iptvalue && false != prop.iptvalue && false != prop.relateIptPropValue ){
-			$.extend( this.construct , {errno : 400201 , errMsg : this.error[400201]} );
+			$.extend( construct , {errno : 400201 , errMsg : this.error[400201]} );
 			return;
 		}else if( false == prop.iptvalue && prop.relateIptDom ){
 			//关联类型的输入内容默认不能为空
-			$.extend( this.construct , {errno : 400001 , errMsg : this.error[400001]} );
+			$.extend( construct , {errno : 400001 , errMsg : this.error[400001]} );
 			return;
 		}else if ( prop.relateIptPropValue == prop.iptvalue && false != prop.iptvalue ){
 			//关联类型的输入内容默认不能为空
-			$.extend( this.construct , {errno : 0 , errMsg : this.error[0]} );
+			$.extend( construct , {errno : 0 , errMsg : this.error[0]} );
 			return;
 		}
 	}
 	/*验证是否使用ajax*/
 	this.verify_ajax	=	function(){
-		var prop	=	this.construct;
+		var prop	=	construct;
 		if ( prop.errno > 0 || false == prop.ajax_url )  return;
 		if( false != prop.ajax_url && false != prop.iptvalue ){
 			layer.load();
@@ -295,10 +297,10 @@ var formVerify	=	function(form){
 				async		:	false,
 				success		:	function(res){
 					layer.closeAll('loading');
-					if( res.status == 1 ) $.extend( that.construct , {errno : 0 , errMsg : that.error[0] } );
+					if( res.status == 1 ) $.extend( construct , {errno : 0 , errMsg : that.error[0] } );
 					else if( res.status == 0 ){
-						$.extend( that.construct , {errno : 400000 , errMsg : res.message } );
-						$.extend( that.error , {400000:res.message} );
+						$.extend( construct , {errno : 400000 , errMsg : res.message } );
+						$.extend( error , {400000:res.message} );
 						if( prop.ajax_refresh ){
 							var src = $( prop.ajax_target ).attr('src');
 							$( prop.ajax_target ).attr( 'src' , src+'?'+Math.random() )
@@ -310,11 +312,11 @@ var formVerify	=	function(form){
 	}
 	/*使用默认方式输出验证结果*/
 	this.default_verifyResponse	=	function(ipt){
-		var prop	=	this.construct;
+		var prop	=	construct;
 		var notice_span	=	$(prop.layerdom).siblings('.help-inline');
-		if( notice_span.length == 0 && prop.showTips ) $(prop.layerdom).after('<i class="icon icon_right"></i><span class="help-inline"></span>');
+		if( false == prop.iptvalue &&  false == prop.showTips ) return;
+		if( notice_span.length == 0 ) $(prop.layerdom).after('<i class="icon icon_right"></i><span class="help-inline"></span>');
 		if( prop.errno == 0 ){
-			if( prop.showTips == false ) return;
 			$(prop.layerdom).siblings('.help-inline').text(prop.errMsg).css( prop.cssOpts_right );
 			$(prop.layerdom).siblings('i').removeClass('icon_wrong').addClass('icon_right');
 			if( prop.relateIptDom ){
@@ -326,8 +328,8 @@ var formVerify	=	function(form){
 		}
 		$(prop.layerdom).siblings('.help-inline').css( prop.cssOpts_wrong );
 		$(prop.layerdom).siblings('i').removeClass('icon_right').addClass('icon_wrong');
-		if( this.error['300000'] && prop.errno != 400000 && prop.errno != 400201 )  {
-			prop.errMsg = this.error['300000']; 
+		if( error['300000'] && prop.errno != 400000 && prop.errno != 400201 )  {
+			prop.errMsg = error['300000']; 
 			prop.errno = 300000;
 		}
 		$(prop.layerdom).siblings('.help-inline').text(prop.errMsg);
@@ -335,7 +337,7 @@ var formVerify	=	function(form){
 	}
 	/*输出验证结果，使用bootstrap输入格式*/
 	this.bs_verifyResponse	=	function(ipt){
-		var prop	=	this.construct;
+		var prop	=	construct;
 		var notice_span	=	$(prop.layerdom).siblings('.help-inline');	
 		if( notice_span.length == 0 ) $(prop.layerdom).parent().append('<i class="icon_tick_green"></i><span class="help-inline"></span>');
 		if( prop.errno == 0 ){
@@ -351,7 +353,7 @@ var formVerify	=	function(form){
 	}
 	/*输出验证结果，使用layer输出格式*/
 	this.layer_verifyResponse	=	function(ipt){
-		var prop	=	this.construct;
+		var prop	=	construct;
 		var color	=	0 == prop.errno ? '#51a351' : '#ed1b24';
 		var index	=	layer.tips( prop.errMsg, prop.layerdom , { time:0 , tipsMore:true ,tips:[2,color],area:['250px','28px'] } );
 		$(ipt).attr('layer_index',index).attr('errno',prop.errno);
@@ -363,7 +365,6 @@ var formVerify	=	function(form){
 	}
 	/*验证开始入口*/
 	this.verify	=	function(ipt){
-		this.init(ipt);
 		this.verifyLength();	//验证长度
 		this.verifyType();		//验证表单类型
 		this.verifyRelation();	//验证表单的关联类型
@@ -401,8 +402,8 @@ var formVerify	=	function(form){
 				if( ischecked == false ){
 					flag	=	false;
 					$(this).siblings('i,.help-inline').remove();
-					$(this).parent().append('<i class="icon icon_wrong"></i><span class="help-inline">'+ that.error['400005'] +'</span>');
-					$(this).siblings('.help-inline').css( that.construct.cssOpts_wrong );
+					$(this).parent().append('<i class="icon icon_wrong"></i><span class="help-inline">'+ error['400005'] +'</span>');
+					$(this).siblings('.help-inline').css( construct.cssOpts_wrong );
 					$(this).siblings('i').removeClass('icon_right').addClass('icon_wrong');
 					return false;
 				}
@@ -413,16 +414,18 @@ var formVerify	=	function(form){
 					flag	=	false;
 					$(this).siblings('i,.help-inline').remove();
 					$(this).parent().append('<i class="icon icon_wrong"></i><span class="help-inline">请输入表单内容</span>');
-					$(this).siblings('.help-inline').css( that.construct.cssOpts_wrong );
+					$(this).siblings('.help-inline').css( construct.cssOpts_wrong );
 					$(this).siblings('i').removeClass('icon_right').addClass('icon_wrong');
 					return false;
 				}
 				else return;
 			}else if( errno > 0 ){
-				if($(this).siblings('.help-inline').length == 0) $(this).parent().append('<i class="icon"></i><span class="help-inline"></span>');
-				$(this).siblings('.help-inline').css( that.construct.cssOpts_wrong );
-				$(this).siblings('i').removeClass('icon_right').addClass('icon_wrong');
-				$(this).siblings('.help-inline').text(that.error[errno]);
+				if($(this).siblings('.help-inline').length == 0){
+					$(this).parent().append('<i class="icon"></i><span class="help-inline"></span>');
+					$(this).siblings('.help-inline').css( construct.cssOpts_wrong );
+					$(this).siblings('i').removeClass('icon_right').addClass('icon_wrong');
+					$(this).siblings('.help-inline').text( error[errno] );
+				}
 				flag	=	false;
 				return false;
 			}else if( errno == 0 ) return ;
